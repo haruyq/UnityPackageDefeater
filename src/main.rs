@@ -18,7 +18,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    if let Err(e) = extractor::extract(&args.input, &args.output_dir, args.meta) {
+    if let Err(e) = extractor::extract(&args.input, &args.output_dir, &args.meta) {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }

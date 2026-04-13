@@ -1,15 +1,14 @@
-use flate2::read::GzDecoder;
-use anyhow::Result;
-use tar::Archive;
-use std::fs;
-use std::fs::File;
-use std::collections::HashMap;
+use std::fs::{self, File};
 use std::io::{self, Read};
 use std::path::PathBuf;
+use std::collections::HashMap;
+use tar::Archive;
+use anyhow::Result;
+use flate2::read::GzDecoder;
 
 use crate::model::GuidEntry;
 
-fn write(entries: HashMap<String, GuidEntry>, output_dir: &str, meta: bool) -> io::Result<()> {
+fn write(entries: HashMap<String, GuidEntry>, output_dir: &str, meta: &bool) -> io::Result<()> {
     for (_, entry_data) in entries {
         let pathname = match entry_data.pathname {
             Some(p) => p,
@@ -28,7 +27,7 @@ fn write(entries: HashMap<String, GuidEntry>, output_dir: &str, meta: bool) -> i
             fs::create_dir_all(&out_path)?;
         }
 
-        if meta &&
+        if *meta &&
             let Some(asset_meta) = entry_data.asset_meta {
                 let mut meta_path = out_path.clone();
                 meta_path.set_extension("meta");
@@ -87,7 +86,7 @@ fn decompress(path: &str) -> Result<Archive<GzDecoder<File>>> {
     Ok(data)
 }
 
-pub fn extract(path: &str, output_dir: &str, meta: bool) -> Result<()> {
+pub fn extract(path: &str, output_dir: &str, meta: &bool) -> Result<()> {
     let mut archive = decompress(path)?;
     let entries = get_entries(&mut archive)?;
 
