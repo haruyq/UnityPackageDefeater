@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use crate::model::GuidEntry;
 
-fn write(entries: HashMap<String, GuidEntry>, output_dir: &str) -> io::Result<()> {
+fn write(entries: HashMap<String, GuidEntry>, output_dir: &str, meta: bool) -> io::Result<()> {
     for (_, entry_data) in entries {
         let pathname = match entry_data.pathname {
             Some(p) => p,
@@ -28,10 +28,11 @@ fn write(entries: HashMap<String, GuidEntry>, output_dir: &str) -> io::Result<()
             fs::create_dir_all(&out_path)?;
         }
 
-        if let Some(asset_meta) = entry_data.asset_meta {
-            let mut meta_path = out_path.clone();
-            meta_path.set_extension("meta");
-            fs::write(meta_path, asset_meta)?;
+        if meta &&
+            let Some(asset_meta) = entry_data.asset_meta {
+                let mut meta_path = out_path.clone();
+                meta_path.set_extension("meta");
+                fs::write(meta_path, asset_meta)?;
         }
     };
 
@@ -86,9 +87,10 @@ fn decompress(path: &str) -> Result<Archive<GzDecoder<File>>> {
     Ok(data)
 }
 
-pub fn extract(path: &str, output_dir: &str) -> Result<()> {
+pub fn extract(path: &str, output_dir: &str, meta: bool) -> Result<()> {
     let mut archive = decompress(path)?;
     let entries = get_entries(&mut archive)?;
-    write(entries, output_dir)?;
+
+    write(entries, output_dir, meta)?;
     Ok(())
 }

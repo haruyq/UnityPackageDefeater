@@ -1,17 +1,24 @@
+use clap::Parser;
+
 mod extractor;
 mod model;
 
+#[derive(Parser)]
+struct Args {
+    #[arg(help = ".unitypackageのパス")]
+    input: String,
+
+    #[arg(help = "出力先ディレクトリ")]
+    output_dir: String,
+
+    #[arg(long, help = ".metaファイルを出力するかどうか")]
+    meta: bool,
+}
+
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() != 3 {
-        eprintln!("Usage: {} <input> <output_dir>", args[0]);
-        std::process::exit(1);
-    }
+    let args = Args::parse();
 
-    let input_path = &args[1];
-    let output_dir = &args[2];
-
-    if let Err(e) = extractor::extract(input_path, output_dir) {
+    if let Err(e) = extractor::extract(&args.input, &args.output_dir, args.meta) {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
