@@ -1,6 +1,6 @@
 use std::fs::{self, File};
 use std::io::{self, Read};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use tar::Archive;
 use anyhow::Result;
@@ -8,29 +8,33 @@ use flate2::read::GzDecoder;
 
 use crate::model::GuidEntry;
 
-fn write(entries: HashMap<String, GuidEntry>, output_dir: &str, meta: &bool) -> io::Result<()> {
+fn write(entries: HashMap<String, GuidEntry>, output_dir: &Path, meta: &bool) -> io::Result<()> {
     for (_, entry_data) in entries {
         let pathname = match entry_data.pathname {
             Some(p) => p,
             None => continue,
         };
-    
-        let mut out_path = PathBuf::from(output_dir);
-        out_path.push(&pathname);
+
+        let target_path = output_dir.join(&pathname);
 
         if let Some(asset) = entry_data.asset {
-            if let Some(parent) = out_path.parent() {
+            if let Some(parent) = target_path.parent() {
                 fs::create_dir_all(parent)?;
             }
-            fs::write(&out_path, asset)?;
+            fs::write(&target_path, asset)?;
         } else {
-            fs::create_dir_all(&out_path)?;
+            fs::create_dir_all(&target_path)?;
         }
 
         if *meta &&
             let Some(asset_meta) = entry_data.asset_meta {
-                let mut meta_path = out_path.clone();
-                meta_path.set_extension("meta");
+                let mut meta_os = target_path.clone().into_os_string();
+                meta_os.push(".meta");
+                let meta_path = PathBuf::from(meta_os);
+
+                if let Some(parent) = meta_path.parent() {
+                    fs::create_dir_all(parent)?;
+                }
                 fs::write(meta_path, asset_meta)?;
         }
     };
@@ -86,7 +90,7 @@ fn decompress(path: &str) -> Result<Archive<GzDecoder<File>>> {
     Ok(data)
 }
 
-pub fn extract(path: &str, output_dir: &str, meta: &bool) -> Result<()> {
+pub fn extract(path: &str, output_dir: &Path, meta: &bool) -> Result<()> {
     let mut archive = decompress(path)?;
     let entries = get_entries(&mut archive)?;
 

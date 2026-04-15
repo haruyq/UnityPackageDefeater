@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::path::PathBuf;
 
 mod extractor;
 mod model;
@@ -18,7 +19,9 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    if let Err(e) = extractor::extract(&args.input, &args.output_dir, &args.meta) {
+    let output_dir = PathBuf::from(args.output_dir);
+
+    if let Err(e) = extractor::extract(&args.input, &output_dir, &args.meta) {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
