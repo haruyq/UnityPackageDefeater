@@ -42,7 +42,7 @@ fn main() {
     let output_dir = args
         .output_dir
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."));
+        .unwrap_or_else(|| PathBuf::from("./export"));
 
     if let Err(e) = extractor::extract(&input, &output_dir, &args.meta) {
         eprintln!("Error: {}", e);
