@@ -1,28 +1,51 @@
 use clap::Parser;
 use std::path::PathBuf;
+use std::process;
 
 mod extractor;
 mod model;
+mod dialog;
 
 #[derive(Parser)]
+#[command(author, version, about)]
 struct Args {
     #[arg(help = ".unitypackageのパス")]
-    input: String,
+    input: Option<String>,
 
     #[arg(help = "出力先ディレクトリ")]
-    output_dir: String,
+    output_dir: Option<String>,
 
-    #[arg(long, help = ".metaファイルを出力するかどうか")]
+    #[arg(long, help = ".metaファイルを出力する")]
     meta: bool,
 }
 
 fn main() {
+    let raw_arg_count = std::env::args_os().count();
     let args = Args::parse();
 
-    let output_dir = PathBuf::from(args.output_dir);
+    let input = if raw_arg_count == 1 {
+        match dialog::open_file_dialog() {
+            Some(path) => path,
+            None => {
+                process::exit(1);
+            }
+        }
+    } else {
+        match args.input {
+            Some(path) => path,
+            None => {
+                process::exit(2);
+            }
+        }
+    };
 
-    if let Err(e) = extractor::extract(&args.input, &output_dir, &args.meta) {
+    let output_dir = args
+        .output_dir
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    if let Err(e) = extractor::extract(&input, &output_dir, &args.meta) {
         eprintln!("Error: {}", e);
-        std::process::exit(1);
+        process::exit(1);
     }
 }

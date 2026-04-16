@@ -20,10 +20,13 @@ fn write(entries: HashMap<String, GuidEntry>, output_dir: &Path, meta: &bool) ->
         if let Some(asset) = entry_data.asset {
             if let Some(parent) = target_path.parent() {
                 fs::create_dir_all(parent)?;
+                println!("Create: {}", parent.display());
             }
             fs::write(&target_path, asset)?;
+            println!("Extract: {}", target_path.display());
         } else {
             fs::create_dir_all(&target_path)?;
+            println!("Create: {}", target_path.display());
         }
 
         if *meta &&
@@ -35,6 +38,7 @@ fn write(entries: HashMap<String, GuidEntry>, output_dir: &Path, meta: &bool) ->
                 if let Some(parent) = meta_path.parent() {
                     fs::create_dir_all(parent)?;
                 }
+                println!("Extract: {}", meta_path.display());
                 fs::write(meta_path, asset_meta)?;
         }
     };
